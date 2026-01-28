@@ -273,26 +273,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   
   // View toggle handlers
-  listViewBtn.addEventListener('click', () => {
-    currentView = 'list';
-    listViewBtn.classList.add('active');
-    calendarViewBtn.classList.remove('active');
-    listView.classList.add('active');
-    calendarView.classList.remove('active');
-  });
-  
-  calendarViewBtn.addEventListener('click', () => {
-    currentView = 'calendar';
-    calendarViewBtn.classList.add('active');
-    listViewBtn.classList.remove('active');
-    calendarView.classList.add('active');
-    listView.classList.remove('active');
-    // Initialize calendar view to month if not set
-    if (!currentCalendarView) {
-      currentCalendarView = 'month';
-    }
-    renderCalendar();
-  });
+  if (listViewBtn && calendarViewBtn && listView && calendarView) {
+    listViewBtn.addEventListener('click', () => {
+      currentView = 'list';
+      listViewBtn.classList.add('active');
+      calendarViewBtn.classList.remove('active');
+      listView.classList.add('active');
+      calendarView.classList.remove('active');
+    });
+    
+    calendarViewBtn.addEventListener('click', () => {
+      currentView = 'calendar';
+      calendarViewBtn.classList.add('active');
+      listViewBtn.classList.remove('active');
+      calendarView.classList.add('active');
+      listView.classList.remove('active');
+      // Initialize calendar view to month if not set
+      if (!currentCalendarView) {
+        currentCalendarView = 'month';
+      }
+      renderCalendar();
+    });
+  }
   
   // Calendar view toggle
   if (dayViewBtn && weekViewBtn && monthViewBtn) {
@@ -815,10 +817,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   function editEventFromModal(index) {
     dayModal.classList.remove('active');
     currentView = 'list';
-    listViewBtn.classList.add('active');
-    calendarViewBtn.classList.remove('active');
-    listView.classList.add('active');
-    calendarView.classList.remove('active');
+    if (listViewBtn && calendarViewBtn && listView && calendarView) {
+      listViewBtn.classList.add('active');
+      calendarViewBtn.classList.remove('active');
+      listView.classList.add('active');
+      calendarView.classList.remove('active');
+    }
     editingIndex = index;
     displayExamPreview();
     // Scroll to the event
