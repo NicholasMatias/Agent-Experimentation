@@ -14,9 +14,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const calendarView = document.getElementById('calendarView');
   const calendarGrid = document.getElementById('calendarGrid');
   const calendarMonthYear = document.getElementById('calendarMonthYear');
-  const prevMonthBtn = document.getElementById('prevMonthBtn');
-  const nextMonthBtn = document.getElementById('nextMonthBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
   const todayBtn = document.getElementById('todayBtn');
+  const dayViewBtn = document.getElementById('dayViewBtn');
+  const weekViewBtn = document.getElementById('weekViewBtn');
+  const monthViewBtn = document.getElementById('monthViewBtn');
+  const monthView = document.getElementById('monthView');
+  const weekView = document.getElementById('weekView');
+  const dayView = document.getElementById('dayView');
+  const weekGrid = document.getElementById('weekGrid');
+  const dayViewHeader = document.getElementById('dayViewHeader');
+  const dayViewEvents = document.getElementById('dayViewEvents');
   const dayModal = document.getElementById('dayModal');
   const modalTitle = document.getElementById('modalTitle');
   const modalEvents = document.getElementById('modalEvents');
@@ -26,8 +35,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   let importantDates = [];
   let editingIndex = null;
   let showPreview = true; // Default to showing preview
-  let currentCalendarDate = new Date(); // Current month being viewed
+  let currentCalendarDate = new Date(); // Current date being viewed
   let currentView = 'list'; // 'list' or 'calendar'
+  let currentCalendarView = 'month'; // 'day', 'week', or 'month'
+  
+  // Initialize calendar view state - ensure only month view is visible
+  if (monthViewBtn && monthView) {
+    monthViewBtn.classList.add('active');
+    monthView.classList.add('active');
+    if (monthView.style) monthView.style.display = 'block';
+  }
+  if (dayViewBtn) dayViewBtn.classList.remove('active');
+  if (weekViewBtn) weekViewBtn.classList.remove('active');
+  if (dayView) {
+    dayView.classList.remove('active');
+    if (dayView.style) dayView.style.display = 'none';
+  }
+  if (weekView) {
+    weekView.classList.remove('active');
+    if (weekView.style) weekView.style.display = 'none';
+  }
   
   // Modal handlers
   modalCloseBtn.addEventListener('click', () => {
@@ -278,24 +305,109 @@ document.addEventListener('DOMContentLoaded', async () => {
     listViewBtn.classList.remove('active');
     calendarView.classList.add('active');
     listView.classList.remove('active');
+    // Initialize calendar view to month if not set
+    if (!currentCalendarView) {
+      currentCalendarView = 'month';
+    }
     renderCalendar();
   });
+  
+  // Calendar view toggle
+  if (dayViewBtn && weekViewBtn && monthViewBtn) {
+    dayViewBtn.addEventListener('click', () => {
+      currentCalendarView = 'day';
+      dayViewBtn.classList.add('active');
+      weekViewBtn.classList.remove('active');
+      monthViewBtn.classList.remove('active');
+      if (dayView) {
+        dayView.classList.add('active');
+        dayView.style.display = 'block';
+      }
+      if (weekView) {
+        weekView.classList.remove('active');
+        weekView.style.display = 'none';
+      }
+      if (monthView) {
+        monthView.classList.remove('active');
+        monthView.style.display = 'none';
+      }
+      renderCalendar();
+    });
+    
+    weekViewBtn.addEventListener('click', () => {
+      currentCalendarView = 'week';
+      weekViewBtn.classList.add('active');
+      dayViewBtn.classList.remove('active');
+      monthViewBtn.classList.remove('active');
+      if (weekView) {
+        weekView.classList.add('active');
+        weekView.style.display = 'block';
+      }
+      if (dayView) {
+        dayView.classList.remove('active');
+        dayView.style.display = 'none';
+      }
+      if (monthView) {
+        monthView.classList.remove('active');
+        monthView.style.display = 'none';
+      }
+      renderCalendar();
+    });
+    
+    monthViewBtn.addEventListener('click', () => {
+      currentCalendarView = 'month';
+      monthViewBtn.classList.add('active');
+      dayViewBtn.classList.remove('active');
+      weekViewBtn.classList.remove('active');
+      if (monthView) {
+        monthView.classList.add('active');
+        monthView.style.display = 'block';
+      }
+      if (dayView) {
+        dayView.classList.remove('active');
+        dayView.style.display = 'none';
+      }
+      if (weekView) {
+        weekView.classList.remove('active');
+        weekView.style.display = 'none';
+      }
+      renderCalendar();
+    });
+  }
   
   // Calendar navigation
-  prevMonthBtn.addEventListener('click', () => {
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
-    renderCalendar();
-  });
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (currentCalendarView === 'day') {
+        currentCalendarDate.setDate(currentCalendarDate.getDate() - 1);
+      } else if (currentCalendarView === 'week') {
+        currentCalendarDate.setDate(currentCalendarDate.getDate() - 7);
+      } else {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+      }
+      renderCalendar();
+    });
+  }
   
-  nextMonthBtn.addEventListener('click', () => {
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
-    renderCalendar();
-  });
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      if (currentCalendarView === 'day') {
+        currentCalendarDate.setDate(currentCalendarDate.getDate() + 1);
+      } else if (currentCalendarView === 'week') {
+        currentCalendarDate.setDate(currentCalendarDate.getDate() + 7);
+      } else {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+      }
+      renderCalendar();
+    });
+  }
   
-  todayBtn.addEventListener('click', () => {
-    currentCalendarDate = new Date();
-    renderCalendar();
-  });
+  if (todayBtn) {
+    todayBtn.addEventListener('click', () => {
+      currentCalendarDate = new Date();
+      renderCalendar();
+    });
+  }
   
   // Set up calendar day click handler (event delegation - only once)
   calendarGrid.addEventListener('click', (e) => {
@@ -339,6 +451,218 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Render calendar view
   function renderCalendar() {
+    // Ensure only the active view is visible
+    if (currentCalendarView === 'day') {
+      if (dayView) {
+        dayView.style.display = 'block';
+        dayView.classList.add('active');
+      }
+      if (weekView) {
+        weekView.style.display = 'none';
+        weekView.classList.remove('active');
+      }
+      if (monthView) {
+        monthView.style.display = 'none';
+        monthView.classList.remove('active');
+      }
+      renderDayView();
+    } else if (currentCalendarView === 'week') {
+      if (weekView) {
+        weekView.style.display = 'block';
+        weekView.classList.add('active');
+      }
+      if (dayView) {
+        dayView.style.display = 'none';
+        dayView.classList.remove('active');
+      }
+      if (monthView) {
+        monthView.style.display = 'none';
+        monthView.classList.remove('active');
+      }
+      renderWeekView();
+    } else {
+      if (monthView) {
+        monthView.style.display = 'block';
+        monthView.classList.add('active');
+      }
+      if (dayView) {
+        dayView.style.display = 'none';
+        dayView.classList.remove('active');
+      }
+      if (weekView) {
+        weekView.style.display = 'none';
+        weekView.classList.remove('active');
+      }
+      renderMonthView();
+    }
+  }
+  
+  function renderDayView() {
+    if (!dayViewHeader || !dayViewEvents || !calendarMonthYear) return;
+    
+    const date = currentCalendarDate;
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    const fullDate = `${dayNames[date.getDay()]}, ${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+    dayViewHeader.textContent = fullDate;
+    calendarMonthYear.textContent = fullDate;
+    
+    // Get events for this day
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    const dateKey = `${year}-${month}-${day}`;
+    
+    const dayEvents = importantDates
+      .map((event, index) => {
+        const eventDate = new Date(event.date);
+        if (eventDate.getFullYear() === year && 
+            eventDate.getMonth() === month && 
+            eventDate.getDate() === day) {
+          return { ...event, index };
+        }
+        return null;
+      })
+      .filter(event => event !== null)
+      .sort((a, b) => {
+        const timeA = new Date(a.date).getTime();
+        const timeB = new Date(b.date).getTime();
+        return timeA - timeB;
+      });
+    
+    if (dayEvents.length === 0) {
+      dayViewEvents.innerHTML = '<div class="no-exams">No events scheduled for this day</div>';
+    } else {
+      dayViewEvents.innerHTML = dayEvents.map(event => {
+        const eventDate = new Date(event.date);
+        const timeStr = eventDate.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit' 
+        });
+        const dateStr = eventDate.toLocaleDateString('en-US', { 
+          weekday: 'short', 
+          month: 'short', 
+          day: 'numeric',
+          year: 'numeric'
+        });
+        
+        return `
+          <div class="modal-event-item">
+            <div class="modal-event-course">${escapeHtml(event.course)}</div>
+            <div class="modal-event-title">${escapeHtml(event.title || 'Important Date')}</div>
+            <div class="modal-event-time">${dateStr} at ${timeStr}</div>
+            ${event.description ? `<div class="modal-event-description">${escapeHtml(event.description.substring(0, 200))}${event.description.length > 200 ? '...' : ''}</div>` : ''}
+            <div class="modal-event-actions">
+              <button class="btn-small modal-edit-btn" data-event-index="${event.index}">Edit</button>
+              <button class="btn-small delete modal-delete-btn" data-event-index="${event.index}">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+  
+  function renderWeekView() {
+    if (!weekGrid || !calendarMonthYear) return;
+    
+    const date = currentCalendarDate;
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    
+    // Get start of week (Sunday)
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(day - date.getDay());
+    
+    // Update header
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
+    const startMonth = startOfWeek.getMonth();
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    const endMonth = endOfWeek.getMonth();
+    
+    if (startMonth === endMonth) {
+      calendarMonthYear.textContent = `${monthNames[startMonth]} ${startOfWeek.getDate()} - ${endOfWeek.getDate()}, ${year}`;
+    } else {
+      calendarMonthYear.textContent = `${monthNames[startMonth]} ${startOfWeek.getDate()} - ${monthNames[endMonth]} ${endOfWeek.getDate()}, ${year}`;
+    }
+    
+    // Build week grid
+    let html = '';
+    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    dayHeaders.forEach(day => {
+      html += `<div class="calendar-day-header">${day}</div>`;
+    });
+    
+    // Get events by date
+    const eventsByDate = {};
+    importantDates.forEach((event, index) => {
+      const eventDate = new Date(event.date);
+      const dateKey = `${eventDate.getFullYear()}-${eventDate.getMonth()}-${eventDate.getDate()}`;
+      if (!eventsByDate[dateKey]) {
+        eventsByDate[dateKey] = [];
+      }
+      eventsByDate[dateKey].push({ ...event, index });
+    });
+    
+    // Render each day of the week
+    for (let i = 0; i < 7; i++) {
+      const currentDay = new Date(startOfWeek);
+      currentDay.setDate(startOfWeek.getDate() + i);
+      const dayYear = currentDay.getFullYear();
+      const dayMonth = currentDay.getMonth();
+      const dayDate = currentDay.getDate();
+      const dateKey = `${dayYear}-${dayMonth}-${dayDate}`;
+      const dayEvents = eventsByDate[dateKey] || [];
+      const isToday = currentDay.toDateString() === new Date().toDateString();
+      
+      let dayClass = 'calendar-day';
+      if (isToday) {
+        dayClass += ' today';
+      }
+      
+      html += `<div class="${dayClass}" data-year="${dayYear}" data-month="${dayMonth}" data-day="${dayDate}">`;
+      html += `<div class="calendar-day-number">${dayDate}</div>`;
+      html += `<div class="calendar-day-events">`;
+      
+      const maxVisible = 3;
+      dayEvents.slice(0, maxVisible).forEach(event => {
+        const eventDate = new Date(event.date);
+        const timeStr = eventDate.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true
+        });
+        const title = escapeHtml(event.title || 'Important Date');
+        const course = escapeHtml(event.course);
+        // Shorter title for horizontal display in week view
+        const fullTitle = title.length > 15 ? title.substring(0, 12) + '...' : title;
+        
+        html += `<div class="calendar-event" title="${course} - ${title} at ${timeStr}">
+          <span class="calendar-event-time">${timeStr}</span>${fullTitle}
+        </div>`;
+      });
+      
+      if (dayEvents.length > maxVisible) {
+        html += `<div class="calendar-event-more">+${dayEvents.length - maxVisible} more</div>`;
+      }
+      
+      if (dayEvents.length === 0) {
+        html += `<div style="flex: 1; min-height: 20px;"></div>`;
+      }
+      
+      html += `</div></div>`;
+    }
+    
+    weekGrid.innerHTML = html;
+  }
+  
+  function renderMonthView() {
+    if (!calendarGrid || !calendarMonthYear) return;
+    
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth();
     
@@ -411,7 +735,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         const title = escapeHtml(event.title || 'Important Date');
         const course = escapeHtml(event.course);
-        const fullTitle = title.length > 25 ? title.substring(0, 22) + '...' : title;
+        // Shorter title for horizontal display
+        const fullTitle = title.length > 15 ? title.substring(0, 12) + '...' : title;
         
         html += `<div class="calendar-event" title="${course} - ${title} at ${timeStr}">
           <span class="calendar-event-time">${timeStr}</span>${fullTitle}
@@ -437,6 +762,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     calendarGrid.innerHTML = html;
+  }
+  
+  // Set up week grid click handler
+  if (weekGrid) {
+    weekGrid.addEventListener('click', (e) => {
+      const dayElement = e.target.closest('.calendar-day');
+      if (dayElement) {
+        const year = parseInt(dayElement.dataset.year);
+        const month = parseInt(dayElement.dataset.month);
+        const day = parseInt(dayElement.dataset.day);
+        if (year && month !== undefined && day) {
+          openDayModal(year, month, day);
+        }
+      }
+    });
   }
   
   // Open modal for a specific day
