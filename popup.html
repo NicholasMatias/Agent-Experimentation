@@ -551,6 +551,52 @@
       color: #999;
       font-style: italic;
     }
+    .modal-edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .modal-edit-form .exam-field {
+      margin: 0;
+    }
+    .modal-edit-form .exam-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .modal-edit-form .exam-field input,
+    .modal-edit-form .exam-field textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    .modal-edit-form .exam-field textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    .modal-edit-form .save-cancel-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+    .modal-edit-form .btn-small.save {
+      background: #28a745;
+    }
+    .modal-edit-form .btn-small.save:hover {
+      background: #218838;
+    }
+    .modal-edit-form .btn-small.cancel {
+      background: #6c757d;
+    }
+    .modal-edit-form .btn-small.cancel:hover {
+      background: #5a6268;
+    }
     
     .list-view {
       display: none;
@@ -629,6 +675,17 @@
           <button class="modal-close" id="modalCloseBtn">&times;</button>
         </div>
         <div class="modal-events" id="modalEvents"></div>
+      </div>
+    </div>
+    
+    <!-- Edit Event Modal -->
+    <div id="editModal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="editModalTitle">Edit Event</div>
+          <button class="modal-close" id="editModalCloseBtn">&times;</button>
+        </div>
+        <div class="modal-edit-form" id="editModalForm"></div>
       </div>
     </div>
   

@@ -29,6 +29,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modalTitle = document.getElementById('modalTitle');
   const modalEvents = document.getElementById('modalEvents');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
+  const editModal = document.getElementById('editModal');
+  const editModalTitle = document.getElementById('editModalTitle');
+  const editModalForm = document.getElementById('editModalForm');
+  const editModalCloseBtn = document.getElementById('editModalCloseBtn');
   
   let courses = [];
   let importantDates = [];
@@ -70,10 +74,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
   
-  // Close modal on Escape key
+  // Edit modal handlers
+  if (editModalCloseBtn) {
+    editModalCloseBtn.addEventListener('click', () => {
+      if (editModal) editModal.classList.remove('active');
+      editingIndex = null;
+    });
+  }
+  
+  if (editModal) {
+    editModal.addEventListener('click', (e) => {
+      if (e.target === editModal) {
+        editModal.classList.remove('active');
+        editingIndex = null;
+      }
+    });
+  }
+  
+  // Close modals on Escape key
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && dayModal && dayModal.classList.contains('active')) {
-      dayModal.classList.remove('active');
+    if (e.key === 'Escape') {
+      if (dayModal && dayModal.classList.contains('active')) {
+        dayModal.classList.remove('active');
+      }
+      if (editModal && editModal.classList.contains('active')) {
+        editModal.classList.remove('active');
+        editingIndex = null;
+      }
     }
   });
   
@@ -469,6 +496,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
   
+  // Set up edit modal form handlers (event delegation - only once)
+  if (editModalForm) {
+    editModalForm.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-save-btn')) {
+        const index = parseInt(e.target.dataset.eventIndex);
+        saveExamFromModal(index);
+      } else if (e.target.classList.contains('modal-cancel-btn')) {
+        if (editModal) editModal.classList.remove('active');
+        editingIndex = null;
+      }
+    });
+  }
+  
   // Render calendar view
   function renderCalendar() {
     // Ensure only the active view is visible
@@ -853,28 +893,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (dayModal) dayModal.classList.add('active');
   }
   
-  // Edit event from modal
+  // Edit event from modal or day view - opens edit modal
   function editEventFromModal(index) {
     if (dayModal) dayModal.classList.remove('active');
-    currentView = 'list';
-    if (listViewBtn && calendarViewBtn && listView && calendarView) {
-      listViewBtn.classList.add('active');
-      calendarViewBtn.classList.remove('active');
-      listView.classList.add('active');
-      calendarView.classList.remove('active');
-    }
-    editingIndex = index;
-    displayExamPreview();
-    // Scroll to the event
-    setTimeout(() => {
-      const eventElement = document.querySelector(`.exam-item:nth-child(${index + 1})`);
-      if (eventElement) {
-        eventElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
+    openEditModal(index);
   };
   
-  // Delete event from modal or day view
+  // Open edit modal for an event
+  function openEditModal(index) {
+    if (!editModal || !editModalForm || !editModalTitle || index < 0 || index >= importantDates.length) {
+      return;
+    }
+    
+    const event = importantDates[index];
+    editingIndex = index;
+    
+    // Set modal title
+    if (editModalTitle) {
+      editModalTitle.textContent = 'Edit Event';
+    }
+    
+    // Create edit form
+    const localDateTime = new Date(event.date);
+    localDateTime.setMinutes(localDateTime.getMinutes() - localDateTime.getTimezoneOffset());
+    const localDateTimeStr = localDateTime.toISOString().slice(0, 16);
+    
+    if (editModalForm) {
+      editModalForm.innerHTML = `
+        <div class="exam-field">
+          <label>Course Name:</label>
+          <input type="text" id="modal-edit-course-${index}" value="${escapeHtml(event.course)}">
+        </div>
+        <div class="exam-field">
+          <label>Event Title:</label>
+          <input type="text" id="modal-edit-title-${index}" value="${escapeHtml(event.title || 'Important Date')}">
+        </div>
+        <div class="exam-field">
+          <label>Date & Time:</label>
+          <input type="datetime-local" id="modal-edit-date-${index}" value="${localDateTimeStr}">
+        </div>
+        <div class="exam-field">
+          <label>Description:</label>
+          <textarea id="modal-edit-desc-${index}">${escapeHtml(event.description || '')}</textarea>
+        </div>
+        <div class="save-cancel-buttons">
+          <button class="btn-small save modal-save-btn" data-event-index="${index}">Save</button>
+          <button class="btn-small cancel modal-cancel-btn">Cancel</button>
+        </div>
+      `;
+    }
+    
+    // Show modal
+    editModal.classList.add('active');
+  };
+  
+  // Delete event from modal or any calendar view - stays in current view
   function deleteEventFromModal(index) {
     if (confirm('Are you sure you want to delete this event?')) {
       // Store the date before deleting (for refreshing the view)
@@ -884,30 +957,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       importantDates.splice(index, 1);
       if (editingIndex === index) {
         editingIndex = null;
+        // Close edit modal if it's open
+        if (editModal) editModal.classList.remove('active');
       } else if (editingIndex > index) {
         editingIndex--;
       }
       
-      // Refresh the current view
-      if (currentView === 'calendar' && currentCalendarView === 'day') {
-        // If in day view, refresh the day view
-        renderCalendar();
-      } else if (dayModal && dayModal.classList.contains('active')) {
-        // If modal is open, refresh it with remaining events for that day
+      // Refresh the current view - stay where we are
+      if (dayModal && dayModal.classList.contains('active')) {
+        // If day modal is open (from month/week view), refresh it with remaining events for that day
         if (importantDates.length > 0) {
           openDayModal(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
         } else {
           // Close modal if no events left
           dayModal.classList.remove('active');
         }
+      } else if (currentView === 'calendar') {
+        // Refresh calendar view (day/week/month) - stays in current view
+        renderCalendar();
       } else {
-        // Otherwise just refresh calendar if in calendar view
-        if (currentView === 'calendar') {
-          renderCalendar();
-        }
+        // List view - refresh list
+        displayExamPreview();
       }
       
-      displayExamPreview();
+      // Always refresh list preview if it's visible (for list view)
+      if (currentView === 'list') {
+        displayExamPreview();
+      }
+      
       if (importantDates.length === 0) {
         if (syncBtn) syncBtn.disabled = true;
         if (previewSection) previewSection.style.display = 'none';
@@ -999,10 +1076,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).join('');
   }
   
-  // Edit exam
+  // Edit exam - uses modal if in calendar view, otherwise uses inline edit in list view
   function editExam(index) {
-    editingIndex = index;
-    displayExamPreview();
+    if (currentView === 'calendar') {
+      // Use modal for calendar views
+      openEditModal(index);
+    } else {
+      // Use inline edit for list view
+      editingIndex = index;
+      displayExamPreview();
+    }
   };
   
   function deleteExam(index) {
@@ -1067,6 +1150,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (currentView === 'calendar') {
       renderCalendar();
     }
+    showStatus('Date updated', 'success');
+    setTimeout(hideStatus, 2000);
+  };
+  
+  // Save exam from modal (used when editing from calendar views)
+  function saveExamFromModal(index) {
+    const courseEl = document.getElementById(`modal-edit-course-${index}`);
+    const titleEl = document.getElementById(`modal-edit-title-${index}`);
+    const dateTimeEl = document.getElementById(`modal-edit-date-${index}`);
+    const descEl = document.getElementById(`modal-edit-desc-${index}`);
+    
+    if (!courseEl || !titleEl || !dateTimeEl || !descEl) {
+      alert('Error: Form elements not found');
+      return;
+    }
+    
+    const course = courseEl.value.trim();
+    const title = titleEl.value.trim();
+    const dateTime = dateTimeEl.value;
+    const description = descEl.value.trim();
+    
+    if (!course) {
+      alert('Course name is required');
+      return;
+    }
+    
+    if (!dateTime) {
+      alert('Date and time are required');
+      return;
+    }
+    
+    // Convert local datetime to ISO string
+    const localDate = new Date(dateTime);
+    const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
+    
+    importantDates[index] = {
+      course: course,
+      title: title || 'Important Date',
+      date: utcDate.toISOString(),
+      description: description,
+      rawText: description
+    };
+    
+    // Close modal
+    if (editModal) editModal.classList.remove('active');
+    editingIndex = null;
+    
+    // Refresh current view
+    if (currentView === 'calendar') {
+      renderCalendar();
+    } else {
+      displayExamPreview();
+    }
+    
     showStatus('Date updated', 'success');
     setTimeout(hideStatus, 2000);
   };
