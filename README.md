@@ -2,6 +2,10 @@
 
 Chrome extension that automatically extracts important dates (exams, assignments, projects, deadlines, etc.) from Canvas syllabi and adds them to your calendar.
 
+## Demo
+
+[Watch the video](CanvasCalendarSyncDemo.mov)
+
 ## Features
 
 - ✅ Scans all Canvas courses automatically
