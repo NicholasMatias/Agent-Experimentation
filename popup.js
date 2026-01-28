@@ -590,12 +590,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       calendarMonthYear.textContent = `${monthNames[startMonth]} ${startOfWeek.getDate()} - ${monthNames[endMonth]} ${endOfWeek.getDate()}, ${year}`;
     }
     
-    // Build week grid
     let html = '';
-    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    dayHeaders.forEach(day => {
-      html += `<div class="calendar-day-header">${day}</div>`;
-    });
+    
     
     // Get events by date
     const eventsByDate = {};
@@ -624,8 +620,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         dayClass += ' today';
       }
       
+      const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][currentDay.getDay()];
       html += `<div class="${dayClass}" data-year="${dayYear}" data-month="${dayMonth}" data-day="${dayDate}">`;
-      html += `<div class="calendar-day-number">${dayDate}</div>`;
+      html += `<div class="calendar-day-number"><span class="day-name">${dayName}</span> <span class="day-date">${dayDate}</span></div>`;
       html += `<div class="calendar-day-events">`;
       
       const maxVisible = 3;
@@ -695,11 +692,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Build calendar grid
     let html = '';
     
-    // Day headers
-    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    dayHeaders.forEach(day => {
-      html += `<div class="calendar-day-header">${day}</div>`;
-    });
+    
     
     // Empty cells for days before month starts
     for (let i = 0; i < startingDayOfWeek; i++) {
@@ -718,8 +711,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         dayClass += ' today';
       }
       
+      const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
       html += `<div class="${dayClass}" data-date="${dateKey}" data-year="${year}" data-month="${month}" data-day="${day}">`;
-      html += `<div class="calendar-day-number">${day}</div>`;
+      html += `<div class="calendar-day-number"><span class="day-name">${dayName}</span> <span class="day-date">${day}</span></div>`;
       html += `<div class="calendar-day-events">`;
       
       // Show up to 4 events, then "more"
